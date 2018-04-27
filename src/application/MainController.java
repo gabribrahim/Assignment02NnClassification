@@ -2,6 +2,7 @@ package application;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -36,6 +37,7 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
 import model.DataSetsLoader;
+import model.LabelledDataInstance;
 import model.Processor;
 
 
@@ -52,13 +54,16 @@ public class MainController {
 	@FXML VBox LearningCurveBox;
 	@FXML TextField MomentumTF;
 	@FXML VBox SnapShotPreviewVB;
+	@FXML Label AccuracyLB;
 	private Main main;
     private NumberAxis xAxis 					= new NumberAxis();
     private NumberAxis yAxis 					= new NumberAxis();
-    private LineChart<Number,Number> lineChart  = new LineChart<Number,Number>(xAxis,yAxis);	
+    private LineChart<Number,Number> lineChart  = new LineChart<Number,Number>(xAxis,yAxis);
+    
 	public DataSetsLoader myDataLoader = new DataSetsLoader();
 	private int totalEpochsCount				= 0;
 	public LinkedHashMap<Integer, Double> learningcurve=new LinkedHashMap<>();
+	public LinkedHashMap<Integer, Double> ValidationCurve=new LinkedHashMap<>();
 	private Processor myModel;			
 	
 	public void setMain(Main main) {
@@ -73,12 +78,14 @@ public class MainController {
 		myDataLoader.loadIrisDataSet(System.getProperty("user.dir").replace('\\', '/') + "/iris-test.txt",myDataLoader.testDataSetList);
 		myDataLoader.writeIrisDataSetForNN();
 		myDataLoader.writeTestIrisDataSetForNN();
-        myModel.buildNNTest();        
+        myModel.buildNNTest();  
+        
         
 	}
 	public void buildNNFromUiAttrs() {
 		myModel.epochsCounter=0;
 		learningcurve.clear();
+		ValidationCurve.clear();
 		myModel.buildNNTest2(Integer.parseInt(HiddenLayersCountTF.getText()),Integer.parseInt(NeurounsCountPerHlayerTF.getText()));
 		appendToStatusText("Biult New NN\n HiddenLayers="+HiddenLayersCountTF.getText()
 		+"\nNeuronsPerHiddenLayer="+NeurounsCountPerHlayerTF.getText());
@@ -106,8 +113,9 @@ public class MainController {
 	}
 	public void drawLearningCurve(double fractionOfPointsToKeep) {
 		lineChart.getData().clear();
-		Map.Entry<Integer,Double> firstEntry					= (Map.Entry<Integer,Double>) learningcurve.entrySet().toArray()[0];		
+		Map.Entry<Integer,Double> firstEntry	= (Map.Entry<Integer,Double>) learningcurve.entrySet().toArray()[0];		
 		XYChart.Series<Number,Number> series 	= new XYChart.Series<>();
+		series.setName("Error");
 		series.getData().add(new XYChart.Data(firstEntry.getKey(), firstEntry.getValue()));
 		double pointsToSkip						= learningcurve.size()*fractionOfPointsToKeep;
 		Iterator iter							=learningcurve.entrySet().iterator();
@@ -123,8 +131,23 @@ public class MainController {
 		series.getData().add(new XYChart.Data(lastEntry.getKey(), lastEntry.getValue()));
 
 		lineChart.getData().add(series);
-		
+		drawValidationCurve();
 	}	
+	public void drawValidationCurve() {
+		XYChart.Series<Number,Number> series 	= new XYChart.Series<>();
+		series.setName("TestDataSet Error");
+		series.getData().clear();
+		Iterator iter							=ValidationCurve.entrySet().iterator();
+		while(iter.hasNext()) {
+			Map.Entry<Integer,Double> point		= (Map.Entry)iter.next();
+			series.getData().add(new XYChart.Data(point.getKey(), point.getValue()));
+		}
+		lineChart.getData().add(series);
+		
+	}
+		
+		
+
 	public void setupLearningCurveChart() {
         xAxis.setLabel("Epoch");
         yAxis.setLabel("Error");        
@@ -182,8 +205,52 @@ public class MainController {
 
 		return selected;
 	}
+	public void measurePerformance2() {
+		
+		ArrayList<String> classes 				= new ArrayList<>(myDataLoader.dataSetClasses);
+		int correctCount						= 0;
+		for (LabelledDataInstance instance:myDataLoader.testDataSetList) {
+			double [][] inputArray					= {
+					{Double.parseDouble(instance.featuresListAsStrings.get(0)),
+					Double.parseDouble(instance.featuresListAsStrings.get(1)),
+					Double.parseDouble(instance.featuresListAsStrings.get(2)),
+					Double.parseDouble(instance.featuresListAsStrings.get(3)),
+					}
+			};
+			double output							= myModel.checkOutputOfOneInstance(inputArray);
+			int groundTruth							= classes.indexOf(instance.labelName);
+			double roundedOutput					= Double.parseDouble(myDataLoader.getValueFromTmpFile());
+//			System.out.println(output+"<<>>"+groundTruth+"<<>>"+roundedOutput);
+			if ((int)roundedOutput == groundTruth) {
+				correctCount++;
+			}
+			double accuracy							= ((double)correctCount /(double)myDataLoader.trainingDataSetList.size())*100.0;
+			AccuracyLB.setText("CorrectCount = " + correctCount +
+							" Accuracy   = " + accuracy);
+		}
+	}
 	public void measurePerformance() {
 		myModel.measurePerformance();
+		ArrayList<Double> outputPredictions		= myDataLoader.getValueFromOutputFile();
+		ArrayList<String> classes 				= new ArrayList<>(myDataLoader.dataSetClasses);
+		int correctCount						= 0;
+		
+		for (LabelledDataInstance instance :myDataLoader.testDataSetList) {
+			int groundTruth						= classes.indexOf(instance.labelName);
+			int index							= myDataLoader.testDataSetList.indexOf(instance);
+			double prediction					= outputPredictions.get(index);
+//			System.out.println("Index :"+index+" Target "+ groundTruth+" Prediction "+ Math.round(prediction)+ " "+prediction);
+			if (Math.round(prediction)==groundTruth) {
+				correctCount++;
+			};
+		}
+		double accuracy							= ((double)correctCount /(double)myDataLoader.trainingDataSetList.size())*100.0;
+		double error							= 1.0 -((double)correctCount /(double)myDataLoader.trainingDataSetList.size());
+		ValidationCurve.put(myModel.epochsCounter, error);
+		AccuracyLB.setText("CorrectCount = " + correctCount +
+						" Accuracy   = " + accuracy);
+		
+		
 	}
 	public void saveAsPng(String fileName) {
 		double scale							= 5;

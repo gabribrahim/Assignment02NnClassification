@@ -30,12 +30,14 @@
                         <Button alignment="BASELINE_LEFT" mnemonicParsing="false" onAction="#runNN" prefHeight="39.0" prefWidth="755.0" text="Train Network" />
                         <Button alignment="BASELINE_LEFT" mnemonicParsing="false" onAction="#measurePerformance" prefWidth="755.0" text="TestSet Error Measure" />
                         <Button alignment="BASELINE_LEFT" mnemonicParsing="false" onAction="#saveSnapShot" prefWidth="755.0" text="Save SnapShot" />
+                        <Button alignment="BOTTOM_LEFT" mnemonicParsing="false" onAction="#resampleLearningCurve" prefWidth="755.0" text="Resample Learning Curve" />
                         <TextArea fx:id="StatusTA" maxWidth="-Infinity" prefHeight="457.0" prefWidth="755.0" wrapText="true" VBox.vgrow="ALWAYS" />
                      </children>
                   </VBox>
                   <VBox fx:id="LearningCurveBox" prefHeight="200.0" prefWidth="100.0" HBox.hgrow="ALWAYS">
                      <children>
-                        <Label fx:id="StatusLB" prefHeight="27.0" prefWidth="688.0" text="Label" />
+                        <Label fx:id="StatusLB" prefHeight="27.0" text="Label" />
+                        <Label fx:id="AccuracyLB" />
                      </children>
                   </VBox>
                </children>
@@ -53,7 +55,7 @@
                         <Label text="Momentum:." />
                         <TextField fx:id="MomentumTF" prefWidth="62.0" text="0.5" />
                         <Label text="Epochs :." />
-                        <TextField fx:id="EpochsTF" maxWidth="62.0" text="1000" />
+                        <TextField fx:id="EpochsTF" maxWidth="62.0" text="10" />
                      </children>
                   </HBox>
                   <Separator prefWidth="200.0" />

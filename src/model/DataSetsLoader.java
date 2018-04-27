@@ -55,7 +55,7 @@ public class DataSetsLoader {
 			}
 			line									+=classes.indexOf(instance.labelName);
 			lines.add(line);
-			System.out.println("AddingLIne>>"+line);
+//			System.out.println("AddingLIne>>"+line);
 		}
 		Path file = Paths.get("irisDataTestSetNN.txt");
 		try {
@@ -78,7 +78,7 @@ public class DataSetsLoader {
 			}
 			line									+=classes.indexOf(instance.labelName);
 			lines.add(line);
-			System.out.println("AddingLIne>>"+line);
+//			System.out.println("AddingLIne>>"+line);
 		}
 		Path file = Paths.get("irisDataNN.txt");
 		try {
@@ -87,6 +87,37 @@ public class DataSetsLoader {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}		
+	}
+
+	public ArrayList<Double> getValueFromOutputFile() {
+		File fileObj 								= new File(System.getProperty("user.dir").replace('\\', '/') +"/IrisTestSetOut.txt");
+		String line									="";
+		ArrayList<Double> predictedOutputs			= new ArrayList<>();
+		try (FileReader fileReader = new FileReader(fileObj);
+				BufferedReader bufferedReader		= new BufferedReader(fileReader);){
+				line								= bufferedReader.readLine();
+				while (line!=null) {				 	
+				 	predictedOutputs.add(Double.parseDouble(line));
+				 	line							= bufferedReader.readLine();
+				}
+				
+		} catch (IOException e) {
+			System.out.println("FILE NOT FOUND !!");
+		}		
+		return predictedOutputs;
+	}
+	
+	public String getValueFromTmpFile() {
+		File fileObj 								= new File(System.getProperty("user.dir").replace('\\', '/') +"/IrisTestSetOut.txt");
+		String line									="";
+		try (FileReader fileReader = new FileReader(fileObj);
+				BufferedReader bufferedReader		= new BufferedReader(fileReader);){
+			 	line								= bufferedReader.readLine();
+				
+		} catch (IOException e) {
+			System.out.println("FILE NOT FOUND !!");
+		}		
+		return line;
 	}
 	public String loadIrisDataSet(String filePath, ArrayList<LabelledDataInstance> dataSetList) {		
 		

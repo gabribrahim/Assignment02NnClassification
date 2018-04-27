@@ -11,6 +11,7 @@ import org.joone.engine.SimpleLayer;
 import org.joone.engine.learning.TeachingSynapse;
 import org.joone.io.FileInputSynapse;
 import org.joone.io.FileOutputSynapse;
+import org.joone.io.MemoryInputSynapse;
 import org.joone.net.NeuralNet;
 import application.MainController;
 import javafx.application.Platform;
@@ -23,6 +24,7 @@ public class Processor implements org.joone.engine.NeuralNetListener{
 	private int epochs;
 	public int epochsCounter	= 0;
 	public int nodesPerLayerCount;
+	public int hiddenLayers;
 	HashMap<Integer, SimpleLayer> layersMap = new HashMap<>();	
 	public Processor(MainController uiWin) {
 		super();
@@ -32,17 +34,49 @@ public class Processor implements org.joone.engine.NeuralNetListener{
 		this.epochs				= uiWin.getEpochs();
 	}
 	
-	public void  measurePerformance() {
+	public double checkOutputOfOneInstance(double [][] inputArray) {
 		Monitor monitor	 		= nnet.getMonitor();
-		
+		int numberOfLayers 		= layersMap.keySet().size();
+		double output			= -10.0;
 		layersMap.get(0).removeAllInputs(); // FIRST LAYER IN NET IS ALWAYS THE INPUT
+        MemoryInputSynapse  inputStream = new MemoryInputSynapse();
+        inputStream.setInputArray(inputArray);
+        inputStream.setAdvancedColumnSelector("1,2,3,4");
+        layersMap.get(0).addInputSynapse(inputStream); 
+        monitor.setTotCicles(1);
+        monitor.setLearning(false);        
+        monitor.setTrainingPatterns(1);
+        FileOutputSynapse outputFile = new FileOutputSynapse();
+        // set the output synapse to write the output of the net
+        outputFile.setFileName(System.getProperty("user.dir").replace('\\', '/') +"/tmp.txt");
+        // inject the input and get the output        
+        if(nnet!=null) {
+        	nnet.addOutputSynapse(outputFile);
+//            System.out.println("Testing Performance"+nnet.check());
+            nnet.start();
+            monitor.Go();
+            nnet.join();
+//            System.out.println(layersMap.get(numberOfLayers-1).getLastOutputs().length);
+    		output 				= layersMap.get(numberOfLayers-1).getLastOutputs()[0];
+    		
+    		nnet.removeOutputSynapse(outputFile);
+        }
+		
+		
+        return output;    
+	}
+	public void  measurePerformance() {
+		NeuralNet newNet		= nnet.cloneNet();
+		Monitor monitor	 		= newNet.getMonitor();
+		
+		newNet.getInputLayer().removeAllInputs(); // FIRST LAYER IN NET IS ALWAYS THE INPUT
 		FileInputSynapse inputStream = new FileInputSynapse();
 		/* The first 4 columns contain the input values */
 		inputStream.setAdvancedColumnSelector("1,2,3,4");
 		/* This is the file that contains the input data */
 		String trainingFilePath	= System.getProperty("user.dir").replace('\\', '/') + "/irisDataTestSetNN.txt";
 		inputStream.setInputFile(new File(trainingFilePath));		
-		layersMap.get(0).addInputSynapse(inputStream); // FIRST LAYER IN NET IS ALWAYS THE INPUT	
+		newNet.getInputLayer().addInputSynapse(inputStream); // FIRST LAYER IN NET IS ALWAYS THE INPUT	
 		
         monitor.setTotCicles(1);
         monitor.setLearning(false);
@@ -51,12 +85,12 @@ public class Processor implements org.joone.engine.NeuralNetListener{
         // set the output synapse to write the output of the net
         output.setFileName(System.getProperty("user.dir").replace('\\', '/') +"/IrisTestSetOut.txt");
         // inject the input and get the output
-        if(nnet!=null) {
-            nnet.addOutputSynapse(output);
-            System.out.println("Testing Performance"+nnet.check());
-            nnet.start();
+        if(newNet!=null) {
+        	newNet.addOutputSynapse(output);
+//            System.out.println("Testing Performance"+newNet.check());
+            newNet.start();
             monitor.Go();
-            nnet.join();
+            newNet.join();
         }
         
 		
@@ -67,8 +101,9 @@ public class Processor implements org.joone.engine.NeuralNetListener{
 		nnet.removeAllListeners();
 		nnet.removeAllOutputs();
 		nnet = new NeuralNet();
-		int layersCount			= 0;
-		nodesPerLayerCount		= numberOfNeuronsPerHLayer;	
+		int layersCount				= 0;
+		nodesPerLayerCount			= numberOfNeuronsPerHLayer;	
+		hiddenLayers				= numberOfHiddenLayers;
 		LinearLayer input 			= new LinearLayer("INPUT");
 		input.setRows(4);
 		layersMap.clear();
@@ -218,7 +253,13 @@ public class Processor implements org.joone.engine.NeuralNetListener{
 						+"Current Epoch ="+epochsCounter+"\nLayersInNetwork="+layersMap+"\nNodesPerHiddenLayer="
 						+nodesPerLayerCount;
 		Platform.runLater(()->uiWin.appendToStatusText(message));
-		uiWin.learningcurve.put(epochsCounter, m.getGlobalError());
+		Platform.runLater(()->uiWin.learningcurve.put(epochsCounter, m.getGlobalError()));
+		
+		Platform.runLater(()->uiWin.drawLearningCurveUI());
+		if(epochsCounter%10==0) {
+			Platform.runLater(()->uiWin.measurePerformance());
+		}
+		
 		
 //		uiWin.appendToStatusText(m.getGlobalError()+","+m.getCurrentCicle());
 //		System.out.println(m.getGlobalError()+","+m.getCurrentCicle());
@@ -230,7 +271,7 @@ public class Processor implements org.joone.engine.NeuralNetListener{
 		
 		Monitor m = (Monitor)e.getSource();
 		String message = "Momentum="+m.getMomentum()+" Learning Rate = "+m.getLearningRate()+" Global Error = "+m.getGlobalError()+" "
-						+"Current Epoch ="+epochsCounter+" NodesPerHiddenLayer="
+						+"Current Epoch ="+epochsCounter+" HiddenLayers ="+hiddenLayers+" NodesPerHiddenLayer="
 						+nodesPerLayerCount;
 		Platform.runLater(()->uiWin.drawLearningCurveUI());
 		Platform.runLater(()->uiWin.updateLearningCurveChart(message));
@@ -239,8 +280,10 @@ public class Processor implements org.joone.engine.NeuralNetListener{
 
 	@Override
 	public void errorChanged(NeuralNetEvent e) {
-		Monitor m = (Monitor)e.getSource();
-		System.out.println(m.getGlobalError());
+		
+//		Monitor m = (Monitor)e.getSource();
+//		int numberOfLayers = layersMap.keySet().size();
+//		System.out.println(layersMap.get(numberOfLayers-1).getLastOutputs()[0]);
 		
 	}
 
