@@ -70,7 +70,9 @@ public class MainController {
 		LearningCurveBox.getChildren().add(lineChart);
 		LearningCurveBox.setVgrow(lineChart, Priority.ALWAYS);
 		myDataLoader.loadIrisDataSet(System.getProperty("user.dir").replace('\\', '/') + "/iris-training.txt",myDataLoader.trainingDataSetList);
+		myDataLoader.loadIrisDataSet(System.getProperty("user.dir").replace('\\', '/') + "/iris-test.txt",myDataLoader.testDataSetList);
 		myDataLoader.writeIrisDataSetForNN();
+		myDataLoader.writeTestIrisDataSetForNN();
         myModel.buildNNTest();        
         
 	}
@@ -96,9 +98,12 @@ public class MainController {
 		
 	}	
 	public void drawLearningCurveUI(){
-		drawLearningCurve(0.0);
+		drawLearningCurve(0.01);
 	}	
 	
+	public void updateLearningCurveChart(String Message) {
+		StatusLB.setText(Message);
+	}
 	public void drawLearningCurve(double fractionOfPointsToKeep) {
 		lineChart.getData().clear();
 		Map.Entry<Integer,Double> firstEntry					= (Map.Entry<Integer,Double>) learningcurve.entrySet().toArray()[0];		
@@ -127,6 +132,7 @@ public class MainController {
         lineChart.setCreateSymbols(false);
         lineChart.setAnimated(false);
         lineChart.getXAxis().setAutoRanging(true);
+        lineChart.getXAxis();
 		lineChart.getYAxis().setAutoRanging(true);
 		lineChart.setVerticalGridLinesVisible(true);   
 		
@@ -176,10 +182,12 @@ public class MainController {
 
 		return selected;
 	}
-	
+	public void measurePerformance() {
+		myModel.measurePerformance();
+	}
 	public void saveAsPng(String fileName) {
 		double scale							= 5;
-		Bounds bounds 							= SnapShotPreviewVB.getLayoutBounds();
+		Bounds bounds 							= LearningCurveBox.getLayoutBounds();
 		WritableImage image 					= new WritableImage(
 	            (int) Math.round(bounds.getWidth() * scale),
 	            (int) Math.round(bounds.getHeight() * scale));
@@ -190,7 +198,7 @@ public class MainController {
 		
 //	    WritableImage image2 					= TreeP.snapshot(snapshotParams,null);
     	
-	    ImageView view 							= new ImageView(SnapShotPreviewVB.snapshot(snapshotParams, image));
+	    ImageView view 							= new ImageView(LearningCurveBox.snapshot(snapshotParams, image));
 	    File file = new File(fileName+".png");
 	    
 	    try {
@@ -200,7 +208,7 @@ public class MainController {
 	    }
 	}	
 	public void saveSnapShot() {
-		saveAsPng("LR_" + LearningRateTF.getText()+"_TotalEpochs_"+totalEpochsCount);
+		saveAsPng("LR_" + LearningRateTF.getText()+"_EPC_"+myModel.epochsCounter);
 	}
 		
 }

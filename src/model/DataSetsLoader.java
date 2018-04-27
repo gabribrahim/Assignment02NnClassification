@@ -10,6 +10,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -43,9 +44,32 @@ public class DataSetsLoader {
 		this.maxValuesForFeatures.clear();
 	}
 	
+	public void writeTestIrisDataSetForNN() {
+		ArrayList<String> classes 					= new ArrayList<>(dataSetClasses);
+//		Collections.shuffle(testDataSetList);
+		List<String> lines 							=new ArrayList<String>();
+		for (LabelledDataInstance instance:testDataSetList) {
+			String line								="";
+			for (String value :instance.featuresListAsStrings) {
+				line								+=value+";";
+			}
+			line									+=classes.indexOf(instance.labelName);
+			lines.add(line);
+			System.out.println("AddingLIne>>"+line);
+		}
+		Path file = Paths.get("irisDataTestSetNN.txt");
+		try {
+			Files.write(file, lines, Charset.forName("UTF-8"));
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}		
+	}	
+	
+	
 	public void writeIrisDataSetForNN() {
 		ArrayList<String> classes 					= new ArrayList<>(dataSetClasses);
-		
+		Collections.shuffle(trainingDataSetList);
 		List<String> lines 							=new ArrayList<String>();
 		for (LabelledDataInstance instance:trainingDataSetList) {
 			String line								="";

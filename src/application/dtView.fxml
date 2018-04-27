@@ -28,13 +28,14 @@
                      <children>
                         <Button alignment="BASELINE_LEFT" mnemonicParsing="false" onAction="#buildNNFromUiAttrs" prefWidth="755.0" text="Build Network" />
                         <Button alignment="BASELINE_LEFT" mnemonicParsing="false" onAction="#runNN" prefHeight="39.0" prefWidth="755.0" text="Train Network" />
+                        <Button alignment="BASELINE_LEFT" mnemonicParsing="false" onAction="#measurePerformance" prefWidth="755.0" text="TestSet Error Measure" />
                         <Button alignment="BASELINE_LEFT" mnemonicParsing="false" onAction="#saveSnapShot" prefWidth="755.0" text="Save SnapShot" />
                         <TextArea fx:id="StatusTA" maxWidth="-Infinity" prefHeight="457.0" prefWidth="755.0" wrapText="true" VBox.vgrow="ALWAYS" />
                      </children>
                   </VBox>
                   <VBox fx:id="LearningCurveBox" prefHeight="200.0" prefWidth="100.0" HBox.hgrow="ALWAYS">
                      <children>
-                        <Label prefHeight="27.0" prefWidth="688.0" text="Label" />
+                        <Label fx:id="StatusLB" prefHeight="27.0" prefWidth="688.0" text="Label" />
                      </children>
                   </VBox>
                </children>

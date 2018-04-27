@@ -23,7 +23,9 @@ linear-gradient(to bottom, derive(-fx-base,+50%), derive(-fx-base,-40%), derive(
     -fx-padding: 2px ;
 }
   */
- 
+.chart-series-line {    
+        -fx-stroke-width: 1px;
+       }
   .default-color0.chart-symbol { /*versicolor */
     -fx-background-color: rgb(243,98,45);
     -fx-background-radius: 5;
