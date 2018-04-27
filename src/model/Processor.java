@@ -1,6 +1,7 @@
 package model;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
 import org.joone.engine.FullSynapse;
 import org.joone.engine.LinearLayer;
@@ -9,6 +10,7 @@ import org.joone.engine.NeuralNetEvent;
 import org.joone.engine.SigmoidLayer;
 import org.joone.engine.SimpleLayer;
 import org.joone.engine.learning.TeachingSynapse;
+import org.joone.helpers.factory.JooneTools;
 import org.joone.io.FileInputSynapse;
 import org.joone.io.FileOutputSynapse;
 import org.joone.io.MemoryInputSynapse;
@@ -25,6 +27,8 @@ public class Processor implements org.joone.engine.NeuralNetListener{
 	public int epochsCounter	= 0;
 	public int nodesPerLayerCount;
 	public int hiddenLayers;
+	public double minTestError	= 1000;
+	public String bestNNdescription = "";
 	HashMap<Integer, SimpleLayer> layersMap = new HashMap<>();	
 	public Processor(MainController uiWin) {
 		super();
@@ -64,6 +68,29 @@ public class Processor implements org.joone.engine.NeuralNetListener{
 		
 		
         return output;    
+	}
+	
+	public void saveNeuralNetwork(double accuracy) {
+		try {
+			Monitor m = (Monitor)nnet.getMonitor();
+			bestNNdescription = "Momentum="+m.getMomentum()+" Learning Rate = "+m.getLearningRate()+" Global Error = "+m.getGlobalError()+" "
+							+"Current Epoch ="+epochsCounter+" HiddenLayers ="+hiddenLayers+" NodesPerHiddenLayer="
+							+nodesPerLayerCount+"\nAccuracy@saveTime ="+accuracy;
+			
+			JooneTools.save(nnet, System.getProperty("user.dir").replace('\\', '/') + "/bestNN.jnn");
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	public void loadNeuralNetwork() {
+		try {
+			nnet				= JooneTools.load(System.getProperty("user.dir").replace('\\', '/') + "/bestNN.jnn");
+		} catch (ClassNotFoundException | IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	public void  measurePerformance() {
 		NeuralNet newNet		= nnet.cloneNet();
@@ -237,6 +264,7 @@ public class Processor implements org.joone.engine.NeuralNetListener{
 		monitor.setLearningRate(learningRate);
 		monitor.setMomentum(momentum);		
 		monitor.setTotCicles(epochs);	
+		monitor.setLearning(true);
 		nnet.go(); /* The network starts the training job */
 	}
 	@Override

@@ -86,6 +86,7 @@ public class MainController {
 		myModel.epochsCounter=0;
 		learningcurve.clear();
 		ValidationCurve.clear();
+		myModel.minTestError = 100000;
 		myModel.buildNNTest2(Integer.parseInt(HiddenLayersCountTF.getText()),Integer.parseInt(NeurounsCountPerHlayerTF.getText()));
 		appendToStatusText("Biult New NN\n HiddenLayers="+HiddenLayersCountTF.getText()
 		+"\nNeuronsPerHiddenLayer="+NeurounsCountPerHlayerTF.getText());
@@ -247,10 +248,18 @@ public class MainController {
 		double accuracy							= ((double)correctCount /(double)myDataLoader.trainingDataSetList.size())*100.0;
 		double error							= 1.0 -((double)correctCount /(double)myDataLoader.trainingDataSetList.size());
 		ValidationCurve.put(myModel.epochsCounter, error);
+		if (error<= myModel.minTestError) {
+			myModel.minTestError				= error;
+			myModel.saveNeuralNetwork(accuracy);
+		}
 		AccuracyLB.setText("CorrectCount = " + correctCount +
-						" Accuracy   = " + accuracy);
+						" Accuracy   = " + accuracy+ " Best Accuracy =" + (1.0 - myModel.minTestError)*100);
 		
 		
+	}
+	public void loadBestNN() {
+		myModel.loadNeuralNetwork();
+		StatusLB.setText("Loaded NN Attrs =" + myModel.bestNNdescription);
 	}
 	public void saveAsPng(String fileName) {
 		double scale							= 5;

@@ -31,12 +31,13 @@
                         <Button alignment="BASELINE_LEFT" mnemonicParsing="false" onAction="#measurePerformance" prefWidth="755.0" text="TestSet Error Measure" />
                         <Button alignment="BASELINE_LEFT" mnemonicParsing="false" onAction="#saveSnapShot" prefWidth="755.0" text="Save SnapShot" />
                         <Button alignment="BOTTOM_LEFT" mnemonicParsing="false" onAction="#resampleLearningCurve" prefWidth="755.0" text="Resample Learning Curve" />
+                        <Button alignment="BASELINE_LEFT" mnemonicParsing="false" onAction="#loadBestNN" prefWidth="755.0" text="Load Best NeuralNet Version" />
                         <TextArea fx:id="StatusTA" maxWidth="-Infinity" prefHeight="457.0" prefWidth="755.0" wrapText="true" VBox.vgrow="ALWAYS" />
                      </children>
                   </VBox>
                   <VBox fx:id="LearningCurveBox" prefHeight="200.0" prefWidth="100.0" HBox.hgrow="ALWAYS">
                      <children>
-                        <Label fx:id="StatusLB" prefHeight="27.0" text="Label" />
+                        <Label fx:id="StatusLB" text="Label" />
                         <Label fx:id="AccuracyLB" />
                      </children>
                   </VBox>
